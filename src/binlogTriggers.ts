@@ -57,7 +57,7 @@ export class BinlogTriggers extends EventEmitter {
         [dbConfig.database]: this.allTableEvents ? true : Object.keys(this.tableEvents),
       },
     }, (evt) => {
-      this.emit("binlogEvent", evt);
+      this.emit("binlog", evt);
 
       const eventName = evt.getEventName()
       const table = evt.tableMap && evt.tableMap[evt.tableId]

@@ -55,7 +55,7 @@ async function start() {
     countRows++
   })
 
-  binlogTriggers.on("binlogEvent", console.log)
+  binlogTriggers.on("binlog", console.log)
 
   binlogTriggers.start(dbConfig)
   await adelay(50) // some for for triggers to start

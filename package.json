@@ -1,12 +1,19 @@
 {
   "name": "binlog-triggers-mysql",
   "version": "1.0.0",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "repository": "https://github.com/vasyas/binlog-triggers-mysql.git",
+  "keywords": ["mysql", "binlog", "query", "nodejs", "live query"],
   "author": "vasyas <vasyl@stashuk.com>",
   "license": "MIT",
   "scripts": {
-    "demo": "ts-node demo/reconnect.ts"
+    "demo": "ts-node demo/reconnect.ts",
+    "build": "tsc",
+    "prepare": "yarn build"
   },
   "dependencies": {
     "loglevel": "^1.7.0",

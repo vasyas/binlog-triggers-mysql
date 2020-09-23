@@ -4,9 +4,10 @@
     "module": "commonjs",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./lib",
+    "outDir": "dist",
     "noImplicitAny": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "include": ["src"]
 }

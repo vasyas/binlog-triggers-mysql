@@ -1,5 +1,6 @@
 import {BinlogTriggers, DbConfig} from "../src"
 import * as mysql from "mysql"
+import log = require("loglevel")
 
 const dbConfig: DbConfig = {
   database: "binlog_demo",
@@ -41,6 +42,8 @@ async function adelay(ms) {
 }
 
 async function start() {
+  log.enableAll()
+
   await initDatabase()
 
   let countRows = 0

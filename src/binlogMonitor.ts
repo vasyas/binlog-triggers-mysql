@@ -1,5 +1,5 @@
 import * as ZongJi from "zongji"
-const log = require("loglevel").getLogger("binlog-triggers")
+const log = require("loglevel")
 
 export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {
   const zongji = createBinlogMonitor(dbConfig, options, onBinLog)
@@ -7,7 +7,10 @@ export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {
   let newest = zongji
 
   zongji.on("child", (child, reason) => {
-    log.debug("New binlog monitor created", reason)
+    if (reason) {
+      log.debug("Creating new binlog monitor:", reason.message)
+    }
+
     newest.stop()
     newest = child
   })

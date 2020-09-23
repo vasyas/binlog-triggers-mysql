@@ -1,7 +1,7 @@
 import {DbConfig, startBinlogMonitoring} from "./binlogMonitor"
 import {ensureArray} from "./utils"
 
-const log = require("loglevel").getLogger("binlog-triggers")
+const log = require("loglevel")
 
 export class BinlogTriggers {
   allTables(

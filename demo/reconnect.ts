@@ -36,6 +36,10 @@ async function insertRow() {
   await sql("insert into test values()")
 }
 
+async function adelay(ms) {
+  await new Promise(r => setTimeout(r, ms))
+}
+
 async function start() {
   await initDatabase()
 
@@ -50,14 +54,19 @@ async function start() {
   binlogTriggers.start(dbConfig)
 
   await insertRow()
-  await new Promise(r => setTimeout(r, 100))
+  await adelay(100)
   console.log("Count rows", countRows)
   // should be 1
 
+  console.log("Here the connection should be broken")
+  await adelay(20000)
   // break connection here
   // it should be reconnected
 
+  console.log("Inserting new row")
+
   await insertRow()
+  await adelay(100)
   console.log("Count rows", countRows)
   // should be 2
 }

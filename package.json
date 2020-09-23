@@ -6,7 +6,7 @@
   "author": "vasyas <vasyl@stashuk.com>",
   "license": "MIT",
   "scripts": {
-    "demo": "ts-node ./demo/demo.ts"
+    "demo": "ts-node demo/reconnect.ts"
   },
   "dependencies": {
     "@types/node": "^14.11.2",

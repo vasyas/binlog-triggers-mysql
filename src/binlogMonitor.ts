@@ -38,14 +38,12 @@ function createBinlogMonitor(dbConfig: DbConfig, options, onBinlog) {
     setTimeout(() => {
       // If multiple errors happened, a new instance may have already been created
       if (!("child" in newInst)) {
-        console.log(newInst.options)
-
         newInst.child = createBinlogMonitor(
           dbConfig,
           {
             ...options,
-            binlogName: newInst.binlogName,
-            binlogNextPos: newInst.binlogNextPos
+            filename: newInst.filename,
+            position: newInst.position
           },
           onBinlog
         )

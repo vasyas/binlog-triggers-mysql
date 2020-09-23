@@ -1,0 +1,16 @@
+{
+  "name": "binlog-triggers-mysql",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "repository": "https://github.com/vasyas/binlog-triggers-mysql.git",
+  "author": "vasyas <vasyl@stashuk.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^14.11.2",
+    "loglevel": "^1.7.0",
+    "zongji": "^0.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.3"
+  }
+}

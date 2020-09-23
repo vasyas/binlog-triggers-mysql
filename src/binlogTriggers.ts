@@ -1,9 +1,11 @@
+import {EventEmitter} from "events"
+
 import {DbConfig, startBinlogMonitoring} from "./binlogMonitor"
 import {ensureArray} from "./utils"
 
 const log = require("loglevel")
 
-export class BinlogTriggers {
+export class BinlogTriggers extends EventEmitter {
   allTables(
     events: Partial<BinlogEvents<BinlogEventHandler | BinlogEventHandler[]>> | BinlogEventHandlers
   ) {
@@ -55,7 +57,7 @@ export class BinlogTriggers {
         [dbConfig.database]: this.allTableEvents ? true : Object.keys(this.tableEvents),
       },
     }, (evt) => {
-      // metric("data.binlog.event", 1, "Count")
+      this.emit("binlogEvent", evt);
 
       const eventName = evt.getEventName()
       const table = evt.tableMap && evt.tableMap[evt.tableId]

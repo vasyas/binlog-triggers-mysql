@@ -34,6 +34,7 @@ async function initDatabase() {
 }
 
 async function insertRow() {
+  console.log("Insert row")
   await sql("insert into test values()")
 }
 
@@ -54,7 +55,10 @@ async function start() {
     countRows++
   })
 
+  binlogTriggers.on("binlogEvent", console.log)
+
   binlogTriggers.start(dbConfig)
+  await adelay(50) // some for for triggers to start
 
   await insertRow()
   await adelay(100)

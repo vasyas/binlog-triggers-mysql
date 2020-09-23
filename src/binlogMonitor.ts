@@ -1,4 +1,4 @@
-import ZongJi from "zongji"
+import * as ZongJi from "zongji"
 const log = require("loglevel").getLogger("binlog-triggers")
 
 export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {

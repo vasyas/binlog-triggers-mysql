@@ -11,22 +11,26 @@ export function deepClone<T>(obj: T): T {
 export function convertMysqlTypes(row: Row, table) {
   const columns = getTableColumns(table)
 
-  const booleanFieldNames: string[] = []
-
   if (!columns) return
 
   columns.forEach(field => {
     const {type, length, name} = field
 
-    const bool = (type == 1 || type == 8) && length == 1
+    // tinyint(1)
+    const numberToBoolean = (type == 1 || type == 8) && length == 1
 
-    if (bool) booleanFieldNames.push(name)
-  })
+    if (numberToBoolean) {
+      row[name] = row[name] === null ? null : row[name] == 1
+      return
+    }
 
-  if (booleanFieldNames.length == 0) return
-
-  booleanFieldNames.forEach(fieldName => {
-    row[fieldName] = row[fieldName] === null ? null : row[fieldName] == 1
+    // bit(1), will result in Buffer for mysql
+    // not an issue for mysql2
+    if (type == 16 && length == 1) {
+      if (row[name] !== null && Buffer.isBuffer(row[name])) {
+        row[name] = row[name][0] == 1
+      }
+    }
   })
 }
 

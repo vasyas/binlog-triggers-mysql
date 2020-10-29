@@ -19,7 +19,7 @@
   "scripts": {
     "demo": "ts-node demo/reconnect.ts",
     "build": "tsc",
-    "prepare": "yarn build"
+    "prepublish": "yarn build"
   },
   "dependencies": {
     "loglevel": "^1.7.0",

@@ -1,7 +1,7 @@
 import {EventEmitter} from "events"
 
 import {DbConfig, startBinlogMonitoring} from "./binlogMonitor"
-import {ensureArray} from "./utils"
+import {convertMysqlTypes, ensureArray} from "./utils"
 
 const log = require("loglevel")
 
@@ -79,6 +79,10 @@ export class BinlogTriggers extends EventEmitter {
         })
       } else {
         rows = evt.rows
+      }
+
+      for (const row of [...(rows || []), ...(prevRows || [])]) {
+        convertMysqlTypes(row, table)
       }
 
       const event = {

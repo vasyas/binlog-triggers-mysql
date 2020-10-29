@@ -30,7 +30,7 @@ function sql(s: string): Promise<void> {
 
 async function initDatabase() {
   await sql("drop table if exists test")
-  await sql("create table test (id int(11) primary key auto_increment)")
+  await sql("create table test (id int(11) primary key auto_increment, blocked bit(1) default 0, active tinyint(1) default 1)")
 }
 
 async function insertRow() {

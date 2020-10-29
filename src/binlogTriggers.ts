@@ -141,8 +141,9 @@ export interface BinlogEvents<T> {
   all: T
 }
 
+export type Row = Record<string, any>
 export type BinlogEventHandlers = BinlogEventHandler | BinlogEventHandler[]
-export type BinlogEventHandler = (rows: unknown[], prevRows: unknown[], event: BinlogEvent) => void
+export type BinlogEventHandler = (rows: Row[], prevRows: Row[], event: BinlogEvent) => void
 
 export interface BinlogEvent {
   name: string

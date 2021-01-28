@@ -18,7 +18,6 @@ export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {
   process.on("SIGINT", () => {
     log.debug("Stopping binlog monitor")
     newest.stop()
-    process.exit()
   })
 }
 

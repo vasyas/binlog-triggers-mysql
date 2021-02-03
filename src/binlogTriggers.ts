@@ -47,7 +47,7 @@ export class BinlogTriggers extends EventEmitter {
     return this
   }
 
-  start(dbConfig: DbConfig) {
+  start(dbConfig: DbConfig, serverId?: number) {
     log.info("Binlog triggers starting")
 
     startBinlogMonitoring(dbConfig, {
@@ -56,6 +56,7 @@ export class BinlogTriggers extends EventEmitter {
       includeSchema: {
         [dbConfig.database]: this.allTableEvents ? true : Object.keys(this.tableEvents),
       },
+      serverId
     }, (evt) => {
       this.emit("binlog", evt);
 

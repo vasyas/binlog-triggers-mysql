@@ -8,7 +8,7 @@ and/or operation type (insert, delete etc.)
 ### Usage example
 
 ```typescript
-import {BinlogTriggers, DbConfig} from "../src"
+import {BinlogTriggers, DbConfig} from "binlog-triggers-mysql"
 
 const binlogTriggers = new BinlogTriggers()
 

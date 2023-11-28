@@ -1,4 +1,4 @@
-import * as ZongJi from "zongji"
+const ZongJi = require("zongji")
 const log = require("loglevel")
 
 export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {

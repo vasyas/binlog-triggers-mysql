@@ -30,21 +30,19 @@ export class BinlogTriggers extends EventEmitter {
     tableName: string,
     events: Partial<BinlogEvents<BinlogEventHandler | BinlogEventHandler[]>> | BinlogEventHandlers
   ) {
-    const normalizedTableName = tableName.toLowerCase()
-
     if (typeof events != "object") {
       events = {
         all: events,
       }
     }
 
-    const prevEvents = this.tableEvents[normalizedTableName] || {}
+    const prevEvents = this.tableEvents[tableName] || {}
 
     for (const eventName of Object.keys(events)) {
       prevEvents[eventName] = [...(prevEvents[eventName] || []), ...ensureArray(events[eventName])]
     }
 
-    this.tableEvents[normalizedTableName] = {...prevEvents}
+    this.tableEvents[tableName] = {...prevEvents}
 
     return this
   }

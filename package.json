@@ -22,12 +22,11 @@
     "prepublish": "yarn build"
   },
   "dependencies": {
-    "loglevel": "^1.7.0",
-    "zongji": "^0.5.1"
+    "@vlasky/zongji": "^0.5.9",
+    "loglevel": "^1.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
-    "mysql": "^2.18.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.2"
   }

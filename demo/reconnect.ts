@@ -1,5 +1,5 @@
 import {BinlogTriggers, DbConfig} from "../src"
-import * as mysql from "mysql"
+import * as mysql from "@vlasky/mysql"
 import log = require("loglevel")
 
 const dbConfig: DbConfig = {

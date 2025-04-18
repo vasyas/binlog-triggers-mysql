@@ -3,8 +3,6 @@ import {EventEmitter} from "events"
 import {DbConfig, startBinlogMonitoring} from "./binlogMonitor"
 import {convertMysqlTypes, ensureArray} from "./utils"
 
-const log = require("loglevel")
-
 export class BinlogTriggers extends EventEmitter {
   allTables(
     events: Partial<BinlogEvents<BinlogEventHandler | BinlogEventHandler[]>> | BinlogEventHandlers
@@ -48,7 +46,7 @@ export class BinlogTriggers extends EventEmitter {
   }
 
   start(dbConfig: DbConfig, serverId?: number) {
-    log.info("Binlog triggers starting")
+    console.log("Starting binlog triggers")
 
     startBinlogMonitoring(dbConfig, {
       startAtEnd: true,

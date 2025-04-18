@@ -1,5 +1,4 @@
 const ZongJi = require("@vlasky/zongji")
-const log = require("loglevel")
 
 export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {
   const zongji = createBinlogMonitor(dbConfig, options, onBinLog)
@@ -8,7 +7,7 @@ export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {
 
   zongji.on("child", (child, reason) => {
     if (reason) {
-      log.debug("Creating new binlog monitor:", reason.message)
+      console.log("Creating new binlog monitor:", reason.message)
     }
 
     newest.stop()
@@ -16,7 +15,7 @@ export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {
   })
 
   process.on("SIGINT", () => {
-    log.debug("Stopping binlog monitor")
+    console.log("Stopping binlog monitor")
     newest.stop()
   })
 }
@@ -34,7 +33,11 @@ const RETRY_TIMEOUT = 4000
 function createBinlogMonitor(dbConfig: DbConfig, options, onBinlog) {
   const newInst = new ZongJi(dbConfig, options)
 
+  console.log(`Creating new binlog monitor for ${dbConfig.host}`)
+
   newInst.on("error", (reason: Error) => {
+    console.log("Binlog monitor error", reason.message)
+
     newInst.removeListener("binlog", onBinlog)
 
     setTimeout(() => {

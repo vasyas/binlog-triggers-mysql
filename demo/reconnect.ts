@@ -1,6 +1,5 @@
 import {BinlogTriggers, DbConfig} from "../src"
 import * as mysql from "@vlasky/mysql"
-import log = require("loglevel")
 
 const dbConfig: DbConfig = {
   database: "binlog_demo",
@@ -43,8 +42,6 @@ async function adelay(ms) {
 }
 
 async function start() {
-  log.enableAll()
-
   await initDatabase()
 
   let countRows = 0
@@ -57,7 +54,7 @@ async function start() {
 
   binlogTriggers.on("binlog", console.log)
 
-  binlogTriggers.start(dbConfig)
+  binlogTriggers.start(dbConfig, 100500)
   await adelay(50) // some for for triggers to start
 
   await insertRow()
@@ -66,7 +63,7 @@ async function start() {
   // should be 1
 
   console.log("Here the connection should be broken")
-  await adelay(20000)
+  await adelay(40_000)
   // break connection here
   // it should be reconnected
 

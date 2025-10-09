@@ -45,10 +45,12 @@ export class BinlogTriggers extends EventEmitter {
     return this
   }
 
+  public stop: () => void = () => {}
+
   start(dbConfig: DbConfig, serverId?: number) {
     console.log("Starting binlog triggers")
 
-    startBinlogMonitoring(dbConfig, {
+    this.stop = startBinlogMonitoring(dbConfig, {
       startAtEnd: true,
       includeEvents: ["rotate", "tablemap", "writerows", "deleterows", "updaterows",],
       includeSchema: {
@@ -91,7 +93,11 @@ export class BinlogTriggers extends EventEmitter {
       }
 
       handlers.forEach((h) => {
-        h.call(null, rows, prevRows, event)
+        try {
+          h.call(null, rows, prevRows, event)
+        } catch (e) {
+          console.error("Error in binlog event handler", e)
+        }
       })
     })
   }

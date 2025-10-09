@@ -1,6 +1,6 @@
 const ZongJi = require("@vlasky/zongji")
 
-export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {
+export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog): () => void {
   const zongji = createBinlogMonitor(dbConfig, options, onBinLog)
 
   let newest = zongji
@@ -14,10 +14,16 @@ export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog) {
     newest = child
   })
 
-  process.on("SIGINT", () => {
+  function stop() {
     console.log("Stopping binlog monitor")
     newest.stop()
+  }
+
+  process.on("SIGINT", () => {
+      stop()
   })
+
+  return stop
 }
 
 export interface DbConfig {

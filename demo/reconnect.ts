@@ -29,7 +29,9 @@ function sql(s: string): Promise<void> {
 
 async function initDatabase() {
   await sql("drop table if exists test")
-  await sql("create table test (id int(11) primary key auto_increment, blocked bit(1) default 0, active tinyint(1) default 1)")
+  await sql(
+    "create table test (id int(11) primary key auto_increment, blocked bit(1) default 0, active tinyint(1) default 1)"
+  )
 }
 
 async function insertRow() {
@@ -38,7 +40,7 @@ async function insertRow() {
 }
 
 async function adelay(ms) {
-  await new Promise(r => setTimeout(r, ms))
+  await new Promise((r) => setTimeout(r, ms))
 }
 
 async function start() {
@@ -47,12 +49,13 @@ async function start() {
   let countRows = 0
 
   const binlogTriggers = new BinlogTriggers()
-  binlogTriggers.table("test", (rows) => {
+  binlogTriggers.table("test", (rows, prevRows, event) => {
     console.log("Got new rows", rows)
+    console.log({event})
     countRows++
   })
 
-  binlogTriggers.on("binlog", console.log)
+  // binlogTriggers.on("binlog", console.log)
 
   binlogTriggers.start(dbConfig, 100500)
   await adelay(50) // some for for triggers to start
@@ -62,7 +65,7 @@ async function start() {
   console.log("Count rows", countRows)
   // should be 1
 
-  console.log("Here the connection should be broken")
+  console.log("Here the connection should be broken / app restarted")
   await adelay(40_000)
   // break connection here
   // it should be reconnected
@@ -73,6 +76,8 @@ async function start() {
   await adelay(100)
   console.log("Count rows", countRows)
   // should be 2
+
+  binlogTriggers.stop()
 }
 
 start()

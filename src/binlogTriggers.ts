@@ -45,19 +45,21 @@ export class BinlogTriggers extends EventEmitter {
     return this
   }
 
-  public stop: () => void = () => {}
+  public stop: () => BinlogPosition = () => undefined
 
-  start(dbConfig: DbConfig, serverId?: number) {
+  // save & restore filename & position
+  start(dbConfig: DbConfig, serverId?: number, resume: Partial<BinlogPosition> = {}) {
     console.log("Starting binlog triggers")
 
     this.stop = startBinlogMonitoring(dbConfig, {
       startAtEnd: true,
+      ...resume,
       includeEvents: ["rotate", "tablemap", "writerows", "deleterows", "updaterows",],
       includeSchema: {
         [dbConfig.database]: this.allTableEvents ? true : Object.keys(this.tableEvents),
       },
       serverId
-    }, (evt) => {
+    }, (evt, position) => {
       this.emit("binlog", evt);
 
       const eventName = evt.getEventName()
@@ -86,10 +88,11 @@ export class BinlogTriggers extends EventEmitter {
         convertMysqlTypes(row, table)
       }
 
-      const event = {
+      const event: BinlogEvent = {
         name: eventName,
         tableName: table.tableName,
         evt,
+        position,
       }
 
       handlers.forEach((h) => {
@@ -154,8 +157,14 @@ export type Row = Record<string, any>
 export type BinlogEventHandlers = BinlogEventHandler | BinlogEventHandler[]
 export type BinlogEventHandler = (rows: Row[], prevRows: Row[], event: BinlogEvent) => void
 
-export interface BinlogEvent {
+export type BinlogEvent = {
   name: string
   tableName: string
   evt: unknown
+  position: BinlogPosition
+}
+
+export type BinlogPosition = {
+  filename: string
+  position: number
 }

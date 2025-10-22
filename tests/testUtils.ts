@@ -10,11 +10,11 @@ export const dbConfig: DbConfig = {
   port: 3306,
 }
 
-export function sql(s: string): Promise<unknown> {
+export function sql(s: string): Promise<any> {
   const connection = mysql.createConnection(dbConfig)
   connection.connect()
 
-  return new Promise<unknown>((resolve, reject) => {
+  return new Promise<any>((resolve, reject) => {
     connection.query(s, (error: Error | undefined, results: unknown, fields: unknown) => {
       if (error) reject(error)
       else resolve(results)

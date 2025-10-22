@@ -71,7 +71,9 @@ export class BinlogTriggers extends EventEmitter {
         ...resume,
         includeEvents: ["rotate", "tablemap", "writerows", "deleterows", "updaterows"],
         includeSchema: {
-          [dbConfig.database]: this.allTableEvents ? true : Object.keys(this.tableEvents),
+          [dbConfig.database]: Object.keys(this.allTableEvents).length
+            ? true
+            : Object.keys(this.tableEvents),
         },
         serverId,
       },

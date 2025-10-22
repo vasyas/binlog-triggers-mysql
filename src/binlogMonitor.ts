@@ -53,6 +53,8 @@ function createReconnectingBinlogMonitor(
   console.log(`Creating new binlog monitor for ${dbConfig.host}`)
 
   function onBinlog(evt: ZongJi.Event) {
+    console.log(`Received`, evt.getEventName())
+
     eventHandler(evt, {
       filename: newInst.options.filename,
       position: newInst.options.position,

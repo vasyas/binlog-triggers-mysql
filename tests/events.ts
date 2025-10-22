@@ -61,7 +61,7 @@ describe("Events", () => {
     assert.equal(rows!.length, 1)
     assert.equal(rows![0].name, "name2")
     assert.equal(prevRows!.length, 1)
-    assert.equal(prevRows[0]!.name, "name")
+    assert.equal(prevRows![0]!.name, "name")
     assert.equal(event!.name, "updaterows")
   })
 

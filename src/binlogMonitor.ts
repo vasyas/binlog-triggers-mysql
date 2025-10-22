@@ -3,39 +3,6 @@ import ZongJi from "@vlasky/zongji"
 /** Testing-only */
 export let _latestZongi: any
 
-export function startBinlogMonitoring(
-  dbConfig: DbConfig,
-  options: Options,
-  eventHandler: (evt: ZongJi.Event, position: BinlogPosition) => void
-): () => BinlogPosition {
-  const zongji = createReconnectingBinlogMonitor(dbConfig, options, eventHandler)
-
-  let newest = zongji
-
-  zongji.on("child", (child, reason) => {
-    if (reason) {
-      console.log("Creating new binlog monitor:", reason.message)
-    }
-
-    newest.stop()
-    newest = child
-  })
-
-  function stop(): BinlogPosition {
-    const position: BinlogPosition = {
-      filename: newest.options.filename,
-      position: newest.options.position,
-    }
-
-    console.log("Stopping binlog monitor")
-    newest.stop()
-
-    return position
-  }
-
-  return stop
-}
-
 export interface DbConfig {
   host: string
   user: string
@@ -44,57 +11,77 @@ export interface DbConfig {
   port?: number
 }
 
-const RETRY_TIMEOUT = 4000
+const RETRY_TIMEOUT = 2_000
 
-function createReconnectingBinlogMonitor(
+export function startBinlogMonitoring(
   dbConfig: DbConfig,
-  options: Options,
+  initialOptions: Partial<ZongJi.StartOptions>,
   eventHandler: (evt: ZongJi.Event, position: BinlogPosition) => void
-): ZongJi {
-  const newInst: ZongJi & {child?: ZongJi} = new ZongJi(dbConfig)
-  _latestZongi = newInst
-
-  console.log(`Creating new binlog monitor for ${dbConfig.host}`)
+): () => BinlogPosition {
+  let zongji: ZongJi & {child?: ZongJi}
 
   function onBinlog(evt: ZongJi.Event) {
+    // console.log("EVT: ", {name: evt.getEventName(), nextPosition: evt.nextPosition})
+
     eventHandler(evt, {
-      filename: newInst.options.filename,
-      position: newInst.options.position,
+      filename: zongji.options.filename,
+      position: zongji.options.position,
     })
   }
 
-  newInst.on("error", (reason: Error) => {
+  function onError(reason: Error) {
     console.log("Binlog monitor error", reason.message)
 
-    newInst.removeListener("binlog", onBinlog)
+    zongji.removeListener("binlog", onBinlog)
+    zongji.removeListener("error", onError)
 
     setTimeout(() => {
-      // If multiple errors happened, a new instance may have already been created
-      if (!("child" in newInst)) {
-        newInst.child = createReconnectingBinlogMonitor(
-          dbConfig,
-          {
-            ...options,
-            filename: newInst.options.filename,
-            position: newInst.options.position,
-          },
-          eventHandler
-        )
-        newInst.emit("child", newInst.child, reason)
-        newInst.child.on("child", (child, reason) => newInst.emit("child", child, reason))
-      }
+      connect({
+        filename: zongji.options.filename,
+        position: zongji.options.position,
+      })
     }, RETRY_TIMEOUT)
-  })
+  }
 
-  newInst.on("binlog", onBinlog)
-  newInst.start(options)
+  function connect(position: Partial<BinlogPosition>) {
+    const options = {
+      ...initialOptions,
+      ...position,
+    }
 
-  return newInst
+    if (!options.filename) {
+      options.startAtEnd = true
+    }
+
+    if (zongji) {
+      zongji.stop()
+    }
+
+    console.log(`Connecting binlog triggers to ${dbConfig.host}`, {...options, ...position})
+
+    zongji = new ZongJi(dbConfig)
+    _latestZongi = zongji
+
+    zongji.on("binlog", onBinlog)
+    zongji.on("error", onError)
+
+    zongji.start({...options, ...position})
+  }
+
+  connect({})
+
+  return () => {
+    console.log("Stopping binlog triggers")
+    zongji.stop()
+
+    return {
+      filename: zongji.options.filename,
+      position: zongji.options.position,
+    }
+  }
 }
 
 export type BinlogPosition = {
   filename: string
   position: number
 }
-
-export type Options = {}

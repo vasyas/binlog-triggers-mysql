@@ -61,14 +61,13 @@ export class BinlogTriggers extends EventEmitter {
   }
 
   // save & restore filename & position
-  start(dbConfig: DbConfig, serverId?: number, resume: Partial<BinlogPosition> = {}) {
+  start(dbConfig: DbConfig, serverId: number, position: Partial<BinlogPosition> = {}) {
     console.log("Starting binlog triggers")
 
     this.stop = startBinlogMonitoring(
       dbConfig,
       {
-        startAtEnd: true,
-        ...resume,
+        ...position,
         includeEvents: ["rotate", "tablemap", "writerows", "deleterows", "updaterows"],
         includeSchema: {
           [dbConfig.database]: Object.keys(this.allTableEvents).length

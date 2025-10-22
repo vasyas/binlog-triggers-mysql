@@ -15,6 +15,8 @@ export function sql(s: string): Promise<any> {
   connection.connect()
 
   return new Promise<any>((resolve, reject) => {
+    // console.log("SQL: " + s)
+
     connection.query(s, (error: Error | undefined, results: unknown, fields: unknown) => {
       if (error) reject(error)
       else resolve(results)

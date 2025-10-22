@@ -74,6 +74,7 @@ declare module "@vlasky/zongji" {
     removeListener(event: "binlog", handler: (event: ZongJi.Event) => void): void
 
     on(event: "error", handler: (reason: Error) => void): void
+    removeListener(event: "error", handler: (reason: Error) => void): void
 
     on(event: "child", handler: (child: ZongJi, reason: Error) => void): void
     emit(event: "child", child: ZongJi, reason: Error): void

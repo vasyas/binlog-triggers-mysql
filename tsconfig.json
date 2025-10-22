@@ -1,19 +1,10 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "module": "node16",
-    "target": "es2020",
-    "lib": [
-      "es2020"
-    ],
+    "verbatimModuleSyntax": true,
+    "module": "ESNext",
+    "outDir": "./dist/esm",
     "declaration": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "dist"
-  },
-  "include": [
-    "src"
-  ]
+    "declarationDir": "./dist/types"
+  }
 }

@@ -1,11 +1,9 @@
 {
   "name": "binlog-triggers-mysql",
-  "version": "1.0.13",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "version": "1.1.0",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
   "repository": "https://github.com/vasyas/binlog-triggers-mysql.git",
   "keywords": [
     "mysql",
@@ -15,19 +13,23 @@
     "live query"
   ],
   "author": "vasyas <vasyl@stashuk.com>",
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "scripts": {
-    "demo": "ts-node demo/reconnect.ts",
-    "build": "tsc",
-    "prepublish": "yarn build"
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.json",
+    "build": "npm run build:cjs && npm run build:esm",
+    "test": "node --experimental-transform-types --test-concurrency=1 --test tests/*.ts",
+    "lint": "prettier --check src tests"
   },
   "dependencies": {
     "@vlasky/zongji": "^0.5.9"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^24.5.2",
     "prettier": "^3.6.2",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.3.2"
+    "typescript": "^5.9.2"
   }
 }

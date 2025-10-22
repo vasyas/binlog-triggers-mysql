@@ -83,4 +83,21 @@ describe("binlog continuation", async () => {
 
     assert.equal(events, 2)
   })
+
+  it("no position without events", async () => {
+    let events = 0
+
+    binlogTriggers.table("test", (_rows, _prevRows, _event) => {
+      console.log(_event)
+
+      events++
+    })
+
+    binlogTriggers.start(dbConfig, 100500)
+    await setTimeout(200)
+
+    const position = binlogTriggers.stop()
+    assert.ok(position.filename)
+    assert.ok(position.position > 0)
+  })
 })

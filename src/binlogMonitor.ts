@@ -23,6 +23,11 @@ export function startBinlogMonitoring(
   function onBinlog(evt: ZongJi.Event) {
     // console.log("EVT: ", {name: evt.getEventName(), nextPosition: evt.nextPosition})
 
+    // fix position on rotate
+    if (evt.getEventName() == "rotate") {
+      zongji.options.position = evt.position as number
+    }
+
     eventHandler(evt, {
       filename: zongji.options.filename,
       position: zongji.options.position,

@@ -1,0 +1,41 @@
+import {afterEach, beforeEach, describe, it} from "node:test"
+import {BinlogTriggers} from "../src/binlogTriggers.ts"
+import {dbConfig, killConnection, sql} from "./testUtils.ts"
+import {setTimeout} from "node:timers/promises"
+import * as assert from "node:assert"
+import {_latestZongi} from "../src/binlogMonitor.ts"
+
+describe("binlog continuation", async () => {
+  let binlogTriggers: BinlogTriggers
+
+  beforeEach(async () => {
+    binlogTriggers = new BinlogTriggers()
+  })
+
+  afterEach(() => {
+    binlogTriggers.stop()
+  })
+
+  it("reconnects on mysql connection close", async () => {
+    let events = 0
+
+    binlogTriggers.table("test", (_rows, _prevRows, _event) => {
+      events++
+    })
+
+    binlogTriggers.start(dbConfig, 100500)
+    await setTimeout(10)
+
+    await sql("insert into test(name) values('name')")
+    await setTimeout(10)
+    assert.equal(events, 1)
+
+    await killConnection(_latestZongi.connection)
+    await setTimeout(5_000)
+
+    await sql("insert into test(name) values('name2')")
+    await setTimeout(10)
+
+    assert.equal(events, 2)
+  })
+})

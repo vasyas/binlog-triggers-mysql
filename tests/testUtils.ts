@@ -43,3 +43,7 @@ async function initDatabase() {
 before(async () => {
   await initDatabase()
 })
+
+export async function killConnection(connection: {threadId: string}) {
+  await sql(`kill ${connection.threadId}`)
+}

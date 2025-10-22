@@ -1,4 +1,4 @@
-import {BinlogTriggers, DbConfig} from "../src"
+import {BinlogTriggers, type DbConfig} from "../src/index.ts"
 import * as mysql from "@vlasky/mysql"
 
 const dbConfig: DbConfig = {

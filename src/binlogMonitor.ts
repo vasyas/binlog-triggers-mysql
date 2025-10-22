@@ -1,5 +1,8 @@
 import ZongJi from "@vlasky/zongji"
 
+/** Testing-only */
+export let _latestZongi: any
+
 export function startBinlogMonitoring(
   dbConfig: DbConfig,
   options: Options,
@@ -49,12 +52,11 @@ function createReconnectingBinlogMonitor(
   eventHandler: (evt: ZongJi.Event, position: BinlogPosition) => void
 ): ZongJi {
   const newInst: ZongJi & {child?: ZongJi} = new ZongJi(dbConfig)
+  _latestZongi = newInst
 
   console.log(`Creating new binlog monitor for ${dbConfig.host}`)
 
   function onBinlog(evt: ZongJi.Event) {
-    console.log(`Received`, evt.getEventName())
-
     eventHandler(evt, {
       filename: newInst.options.filename,
       position: newInst.options.position,

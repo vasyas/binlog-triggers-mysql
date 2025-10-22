@@ -19,8 +19,6 @@ describe("Events", () => {
     let rows, prevRows, event: BinlogEvent
 
     binlogTriggers.table("test", (_rows, _prevRows, _event) => {
-      console.log("AA")
-
       rows = _rows
       prevRows = _prevRows
       event = _event

@@ -1,4 +1,5 @@
-import {Row} from "./binlogTriggers"
+import type {Row} from "./binlogTriggers.ts"
+import type ZongJi from "@vlasky/zongji"
 
 export function ensureArray<T>(val: T | Array<T>): Array<T> {
   return Array.isArray(val) ? val : [val]
@@ -8,12 +9,12 @@ export function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj))
 }
 
-export function convertMysqlTypes(row: Row, table) {
+export function convertMysqlTypes(row: Row, table: ZongJi.Table) {
   const columns = getTableColumns(table)
 
   if (!columns) return
 
-  columns.forEach(field => {
+  columns.forEach((field) => {
     const {type, length, name} = field
 
     // tinyint(1)
@@ -34,22 +35,11 @@ export function convertMysqlTypes(row: Row, table) {
   })
 }
 
-type Column = {
-  name: string
-  charset: string
-  type: number
-  metadata: {
-    bits?: number
-  }
-
-  length: number
-}
-
-function getTableColumns(table): Column[] {
+function getTableColumns(table: ZongJi.Table): ZongJi.Column[] {
   // length is missing in columns, popuplate it from def
-  const columns: Column[] = deepClone(table.columns)
+  const columns: ZongJi.Column[] = deepClone(table.columns)
 
-  for (let i = 0; i < table.columnSchemas.length; i ++) {
+  for (let i = 0; i < table.columnSchemas.length; i++) {
     const schema = table.columnSchemas[i]
     const type = schema.COLUMN_TYPE || ""
 

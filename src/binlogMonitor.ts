@@ -1,10 +1,11 @@
-import {BinlogPosition} from "./binlogTriggers"
+import ZongJi from "@vlasky/zongji"
 
-const ZongJi = require("@vlasky/zongji")
-
-// pass filename & position to rsttart
-export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog): () => BinlogPosition {
-  const zongji = createReconnectingBinlogMonitor(dbConfig, options, onBinLog)
+export function startBinlogMonitoring(
+  dbConfig: DbConfig,
+  options: Options,
+  eventHandler: (evt: ZongJi.Event, position: BinlogPosition) => void
+): () => BinlogPosition {
+  const zongji = createReconnectingBinlogMonitor(dbConfig, options, eventHandler)
 
   let newest = zongji
 
@@ -19,8 +20,8 @@ export function startBinlogMonitoring(dbConfig: DbConfig, options, onBinLog): ()
 
   function stop(): BinlogPosition {
     const position: BinlogPosition = {
-      filename: newest.filename,
-      position: newest.position,
+      filename: newest.options.filename,
+      position: newest.options.position,
     }
 
     console.log("Stopping binlog monitor")
@@ -44,23 +45,17 @@ const RETRY_TIMEOUT = 4000
 
 function createReconnectingBinlogMonitor(
   dbConfig: DbConfig,
-  options,
-  eventHandler: (evt: unknown, position: BinlogPosition) => void
-) {
-  const newInst = new ZongJi(dbConfig, options)
+  options: Options,
+  eventHandler: (evt: ZongJi.Event, position: BinlogPosition) => void
+): ZongJi {
+  const newInst: ZongJi & {child?: ZongJi} = new ZongJi(dbConfig)
 
   console.log(`Creating new binlog monitor for ${dbConfig.host}`)
 
-  function onBinlog(evt: any) {
-    console.log(
-      `onBinlog ${evt.getEventName()}:`,
-      newInst.options.position,
-      newInst.options.filename
-    )
-
+  function onBinlog(evt: ZongJi.Event) {
     eventHandler(evt, {
-      filename: newInst.filename,
-      position: newInst.position,
+      filename: newInst.options.filename,
+      position: newInst.options.position,
     })
   }
 
@@ -72,19 +67,17 @@ function createReconnectingBinlogMonitor(
     setTimeout(() => {
       // If multiple errors happened, a new instance may have already been created
       if (!("child" in newInst)) {
-        console.log("Creating child at position", newInst.position)
-
         newInst.child = createReconnectingBinlogMonitor(
           dbConfig,
           {
             ...options,
-            filename: newInst.filename,
-            position: newInst.position,
+            filename: newInst.options.filename,
+            position: newInst.options.position,
           },
           eventHandler
         )
         newInst.emit("child", newInst.child, reason)
-        newInst.child.on("child", (child) => newInst.emit("child", child))
+        newInst.child.on("child", (child, reason) => newInst.emit("child", child, reason))
       }
     }, RETRY_TIMEOUT)
   })
@@ -94,3 +87,10 @@ function createReconnectingBinlogMonitor(
 
   return newInst
 }
+
+export type BinlogPosition = {
+  filename: string
+  position: number
+}
+
+export type Options = {}

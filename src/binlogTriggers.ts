@@ -1,22 +1,34 @@
 import {EventEmitter} from "events"
 
-import {DbConfig, startBinlogMonitoring} from "./binlogMonitor"
-import {convertMysqlTypes, ensureArray} from "./utils"
+import {type DbConfig, startBinlogMonitoring, type BinlogPosition} from "./binlogMonitor.ts"
+import {convertMysqlTypes, ensureArray} from "./utils.ts"
+import ZongJi from "@vlasky/zongji"
+
+function getBinlogEvents(
+  events: Partial<BinlogEvents<BinlogEventHandler | BinlogEventHandler[]>> | BinlogEventHandlers
+): Partial<BinlogEvents<BinlogEventHandler | BinlogEventHandler[]>> {
+  if (typeof events != "object") {
+    return {
+      all: events,
+    }
+  }
+
+  return events as Partial<BinlogEvents<BinlogEventHandler | BinlogEventHandler[]>>
+}
 
 export class BinlogTriggers extends EventEmitter {
   allTables(
     events: Partial<BinlogEvents<BinlogEventHandler | BinlogEventHandler[]>> | BinlogEventHandlers
   ) {
-    if (typeof events != "object") {
-      events = {
-        all: events,
-      }
-    }
+    const binlogEvents = getBinlogEvents(events)
 
     const prevEvents = this.allTableEvents || {}
 
-    for (const eventName of Object.keys(events)) {
-      prevEvents[eventName] = [...(prevEvents[eventName] || []), ...ensureArray(events[eventName])]
+    for (const eventName of Object.keys(binlogEvents) as BinlogEventType[]) {
+      prevEvents[eventName] = [
+        ...(prevEvents[eventName] || []),
+        ...ensureArray(binlogEvents[eventName]!),
+      ]
     }
 
     this.allTableEvents = {...prevEvents}
@@ -28,16 +40,15 @@ export class BinlogTriggers extends EventEmitter {
     tableName: string,
     events: Partial<BinlogEvents<BinlogEventHandler | BinlogEventHandler[]>> | BinlogEventHandlers
   ) {
-    if (typeof events != "object") {
-      events = {
-        all: events,
-      }
-    }
+    const binlogEvents = getBinlogEvents(events)
 
     const prevEvents = this.tableEvents[tableName] || {}
 
-    for (const eventName of Object.keys(events)) {
-      prevEvents[eventName] = [...(prevEvents[eventName] || []), ...ensureArray(events[eventName])]
+    for (const eventName of Object.keys(binlogEvents) as BinlogEventType[]) {
+      prevEvents[eventName] = [
+        ...(prevEvents[eventName] || []),
+        ...ensureArray(binlogEvents[eventName]!),
+      ]
     }
 
     this.tableEvents[tableName] = {...prevEvents}
@@ -45,70 +56,76 @@ export class BinlogTriggers extends EventEmitter {
     return this
   }
 
-  public stop: () => BinlogPosition = () => undefined
+  public stop: () => BinlogPosition = () => {
+    throw new Error("Not started")
+  }
 
   // save & restore filename & position
   start(dbConfig: DbConfig, serverId?: number, resume: Partial<BinlogPosition> = {}) {
     console.log("Starting binlog triggers")
 
-    this.stop = startBinlogMonitoring(dbConfig, {
-      startAtEnd: true,
-      ...resume,
-      includeEvents: ["rotate", "tablemap", "writerows", "deleterows", "updaterows",],
-      includeSchema: {
-        [dbConfig.database]: this.allTableEvents ? true : Object.keys(this.tableEvents),
+    this.stop = startBinlogMonitoring(
+      dbConfig,
+      {
+        startAtEnd: true,
+        ...resume,
+        includeEvents: ["rotate", "tablemap", "writerows", "deleterows", "updaterows"],
+        includeSchema: {
+          [dbConfig.database]: this.allTableEvents ? true : Object.keys(this.tableEvents),
+        },
+        serverId,
       },
-      serverId
-    }, (evt, position) => {
-      this.emit("binlog", evt);
+      (evt, position) => {
+        this.emit("binlog", evt)
 
-      const eventName = evt.getEventName()
-      const table = evt.tableMap && evt.tableMap[evt.tableId]
+        const eventName = evt.getEventName()
+        const table = evt.tableMap && evt.tableMap[evt.tableId!]
 
-      if (!table) return
+        if (!table) return
 
-      const handlers = this.getHandlers(table.tableName, eventName)
+        const handlers = this.getHandlers(table.tableName, eventName)
 
-      let rows = null
-      let prevRows = null
+        let rows: Row[]
+        let prevRows = undefined
 
-      if (eventName == "updaterows") {
-        rows = []
-        prevRows = []
+        if (eventName == "updaterows") {
+          rows = []
+          prevRows = []
 
-        evt.rows.forEach(({before, after}) => {
-          prevRows.push(before)
-          rows.push(after)
-        })
-      } else {
-        rows = evt.rows
-      }
-
-      for (const row of [...(rows || []), ...(prevRows || [])]) {
-        convertMysqlTypes(row, table)
-      }
-
-      const event: BinlogEvent = {
-        name: eventName,
-        tableName: table.tableName,
-        evt,
-        position,
-      }
-
-      handlers.forEach((h) => {
-        try {
-          h.call(null, rows, prevRows, event)
-        } catch (e) {
-          console.error("Error in binlog event handler", e)
+          evt.rows!.forEach(({before, after}) => {
+            prevRows.push(before)
+            rows.push(after)
+          })
+        } else {
+          rows = evt.rows!
         }
-      })
-    })
+
+        for (const row of [...(rows || []), ...(prevRows || [])]) {
+          convertMysqlTypes(row, table)
+        }
+
+        const event: BinlogEvent = {
+          name: eventName,
+          tableName: table.tableName,
+          evt,
+          position,
+        }
+
+        handlers.forEach((h) => {
+          try {
+            h.call(null, rows, prevRows, event)
+          } catch (e) {
+            console.error("Error in binlog event handler", e)
+          }
+        })
+      }
+    )
   }
 
   private tableEvents: {[tableName: string]: Partial<BinlogEvents<BinlogEventHandler[]>>} = {}
   private allTableEvents: Partial<BinlogEvents<BinlogEventHandler[]>> = {}
 
-  private getHandlers(tableName, eventName): BinlogEventHandler[] {
+  private getHandlers(tableName: string, eventName: ZongJi.EventTypes): BinlogEventHandler[] {
     const events = this.tableEvents[tableName] || {}
 
     if (eventName == "writerows")
@@ -153,18 +170,19 @@ export interface BinlogEvents<T> {
   all: T
 }
 
+export type BinlogEventType = keyof BinlogEvents<unknown>
+
 export type Row = Record<string, any>
 export type BinlogEventHandlers = BinlogEventHandler | BinlogEventHandler[]
-export type BinlogEventHandler = (rows: Row[], prevRows: Row[], event: BinlogEvent) => void
+export type BinlogEventHandler = (
+  rows: Row[],
+  prevRows: Row[] | undefined,
+  event: BinlogEvent
+) => void
 
 export type BinlogEvent = {
   name: string
   tableName: string
   evt: unknown
   position: BinlogPosition
-}
-
-export type BinlogPosition = {
-  filename: string
-  position: number
 }

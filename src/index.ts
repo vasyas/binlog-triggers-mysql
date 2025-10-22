@@ -1,2 +1,2 @@
-export * from "./binlogTriggers"
-export {DbConfig} from "./binlogMonitor"
+export * from "./binlogTriggers.ts"
+export type {DbConfig, BinlogPosition} from "./binlogMonitor.ts"

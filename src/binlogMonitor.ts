@@ -79,6 +79,9 @@ export function startBinlogMonitoring(
     console.log("Stopping binlog triggers")
     zongji.stop()
 
+    // to prevent reconnecting on stop
+    zongji.removeListener("error", onError)
+
     return {
       filename: zongji.options.filename,
       position: zongji.options.position,

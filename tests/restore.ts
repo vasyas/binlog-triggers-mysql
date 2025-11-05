@@ -68,10 +68,10 @@ describe("binlog continuation", async () => {
     })
 
     binlogTriggers.start(dbConfig, 100500)
-    await setTimeout(10)
+    await setTimeout(20)
 
     await sql("insert into test(name) values('name')")
-    await setTimeout(10)
+    await setTimeout(20)
     assert.equal(events, 1)
 
     sql("insert into test(name) values('name2')")

@@ -20,6 +20,8 @@ export function startBinlogMonitoring(
 ): () => BinlogPosition {
   let zongji: ZongJi & {child?: ZongJi}
 
+  let lastEvt: ZongJi.Event
+
   function onBinlog(evt: ZongJi.Event) {
     // console.log("EVT: ", {name: evt.getEventName(), nextPosition: evt.nextPosition})
 
@@ -28,6 +30,8 @@ export function startBinlogMonitoring(
       zongji.options.position = evt.position as number
     }
 
+    lastEvt = evt
+
     eventHandler(evt, {
       filename: zongji.options.filename,
       position: zongji.options.position,
@@ -35,7 +39,18 @@ export function startBinlogMonitoring(
   }
 
   function onError(reason: Error) {
-    console.log("Binlog monitor error", reason.message)
+    console.log(
+      "Binlog monitor error.",
+      {
+        filename: zongji.options.filename,
+        position: zongji.options.position,
+        lastEvt: {
+          eventName: lastEvt?.getEventName(),
+          size: lastEvt?.size,
+        },
+      },
+      reason
+    )
 
     zongji.removeListener("binlog", onBinlog)
     zongji.removeListener("error", onError)

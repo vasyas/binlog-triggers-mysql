@@ -21,6 +21,8 @@ export function startBinlogMonitoring(
   let zongji: ZongJi & {child?: ZongJi}
 
   let lastEvt: ZongJi.Event
+  let lastFilename: string
+  let lastPosition: number
 
   function onBinlog(evt: ZongJi.Event) {
     // console.log("EVT: ", {name: evt.getEventName(), nextPosition: evt.nextPosition})
@@ -31,6 +33,8 @@ export function startBinlogMonitoring(
     }
 
     lastEvt = evt
+    lastFilename = zongji.options.filename
+    lastPosition = zongji.options.position
 
     eventHandler(evt, {
       filename: zongji.options.filename,
@@ -48,6 +52,8 @@ export function startBinlogMonitoring(
           eventName: lastEvt?.getEventName(),
           size: lastEvt?.size,
         },
+        lastFilename,
+        lastPosition,
       },
       reason
     )

@@ -20,10 +20,6 @@ export function startBinlogMonitoring(
 ): () => BinlogPosition {
   let zongji: ZongJi & {child?: ZongJi}
 
-  let lastEvt: ZongJi.Event
-  let lastFilename: string
-  let lastPosition: number
-
   function onBinlog(evt: ZongJi.Event) {
     // console.log("EVT: ", {name: evt.getEventName(), nextPosition: evt.nextPosition})
 
@@ -31,10 +27,6 @@ export function startBinlogMonitoring(
     if (evt.getEventName() == "rotate") {
       zongji.options.position = evt.position as number
     }
-
-    lastEvt = evt
-    lastFilename = zongji.options.filename
-    lastPosition = zongji.options.position
 
     eventHandler(evt, {
       filename: zongji.options.filename,
@@ -48,24 +40,20 @@ export function startBinlogMonitoring(
       {
         filename: zongji.options.filename,
         position: zongji.options.position,
-        lastEvt: {
-          eventName: lastEvt?.getEventName(),
-          size: lastEvt?.size,
-        },
-        lastFilename,
-        lastPosition,
       },
       reason
     )
+
+    const restartAt: BinlogPosition = {
+      filename: zongji.options.filename,
+      position: zongji.options.position,
+    }
 
     zongji.removeListener("binlog", onBinlog)
     zongji.removeListener("error", onError)
 
     setTimeout(() => {
-      connect({
-        filename: zongji.options.filename,
-        position: zongji.options.position,
-      })
+      connect(restartAt)
     }, RETRY_TIMEOUT)
   }
 
